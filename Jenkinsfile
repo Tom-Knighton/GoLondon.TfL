@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  environment {
+    devSSH = credentials('publish_dev_remote')
+    devSSHCmd = credentials('publish_dev_command')
+  }
+
   stages {
     stage("Clean") {
         steps {
@@ -42,6 +47,14 @@ pipeline {
                     echo "Building..."
                     dotnetBuild configuration: 'Release', noRestore: true, sdk: '.NET 7'
                 }
+            }
+        }
+    }
+
+    stage("Publish") {
+        steps {
+            script {
+                sshPublisher(publishers: [sshPublisherDesc(configName: $devSSH, transfers: [sshTransfer(cleanRemote: true, excludes: '', execCommand: $devSSHCmd, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: 'GoLondon.TfL', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '*')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
             }
         }
     }
