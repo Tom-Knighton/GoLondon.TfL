@@ -7,7 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="GoLondon.Standard" Version="2023.2.18.2153" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\GoLondon.TfL.Services\GoLondon.TfL.Services.csproj" />
     </ItemGroup>
 
 </Project>
