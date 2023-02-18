@@ -39,7 +39,7 @@ public class TfLAccessHandler : DelegatingHandler
             throw new ArgumentNullException(nameof(request.RequestUri), "The request's URI was null or invalid");
         
         var uriBuilder = new UriBuilder(request.RequestUri);
-        uriBuilder.Query += $"app_id={_appId}&app_key={_appToken}";
+        uriBuilder.Query += $"{(uriBuilder.Query.Any() ? "&" : "")}app_id={_appId}&app_key={_appToken}";
         request.RequestUri = uriBuilder.Uri;
 
         return base.SendAsync(request, cancellationToken);
