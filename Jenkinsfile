@@ -54,7 +54,22 @@ pipeline {
     stage("Publish") {
         steps {
             script {
-                sshPublisher(publishers: [sshPublisherDesc(configName: $devSSH, transfers: [sshTransfer(cleanRemote: true, excludes: '', execCommand: $devSSHCmd, execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: 'GoLondon.TfL', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '*')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+                sshPublisher(
+                        publishers: [
+                            sshPublisherDesc(
+                                configName: 'VPS',
+                                verbose: true,
+                                transfers: [
+                                    sshTransfer(
+                                        sourceFiles: "**/*",
+                                        remoteDirectory: "GoLondon.TfL.Dev",
+                                        execTimeout: 120000,
+                                        execCommand: './_scripts/gltfl_dev.sh'
+                                    )
+                                ]
+                            )
+                        ]
+                    )
             }
         }
     }
