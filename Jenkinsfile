@@ -46,55 +46,48 @@ pipeline {
         }
     }
 
-    if (env.BRANCH_NAME == 'main') {
-        stage("Publish") {
-            steps {
-                script {
+    stage("Publish") {
+        steps {
+            script {
+                if (env.BRANCH_NAME == 'main') {
                     sshPublisher(
-                            publishers: [
-                                sshPublisherDesc(
-                                    configName: 'VPS',
-                                    verbose: true,
-                                    transfers: [
-                                        sshTransfer(
-                                            sourceFiles: "**/*",
-                                            remoteDirectory: 'GoLondon.TfL.Live',
-                                            execTimeout: 120000,
-                                            execCommand: './_scripts/gltfl.sh'
-                                        )
-                                    ]
-                                )
-                            ]
-                        )
+                        publishers: [
+                            sshPublisherDesc(
+                                configName: 'VPS',
+                                verbose: true,
+                                transfers: [
+                                    sshTransfer(
+                                        sourceFiles: "**/*",
+                                        remoteDirectory: 'GoLondon.TfL.Live',
+                                        execTimeout: 120000,
+                                        execCommand: './_scripts/gltfl.sh'
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                }
+
+                if (env.BRANCH_NAME == 'develop') {
+                    sshPublisher(
+                        publishers: [
+                            sshPublisherDesc(
+                                configName: 'VPS',
+                                verbose: true,
+                                transfers: [
+                                    sshTransfer(
+                                        sourceFiles: "**/*",
+                                        remoteDirectory: 'GoLondon.TfL.Dev',
+                                        execTimeout: 120000,
+                                        execCommand: './_scripts/gltfl_dev.sh'
+                                    )
+                                ]
+                            )
+                        ]
+                    )
                 }
             }
         }
     }
-
-    if (env.BRANCH_NAME == 'develop') {
-        stage("Publish Dev") {
-            steps {
-                script {
-                    sshPublisher(
-                            publishers: [
-                                sshPublisherDesc(
-                                    configName: 'VPS',
-                                    verbose: true,
-                                    transfers: [
-                                        sshTransfer(
-                                            sourceFiles: "**/*",
-                                            remoteDirectory: 'GoLondon.TfL.Dev',
-                                            execTimeout: 120000,
-                                            execCommand: './_scripts.gltfl_dev.sh'
-                                        )
-                                    ]
-                                )
-                            ]
-                        )
-                }
-            }
-        }
-    }
-
   }
 }
