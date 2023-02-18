@@ -33,6 +33,17 @@ public class StopPointController : ControllerBase
         {
             return BadRequest($"No stop point with id {id} was found");
         }
+        
+    }
+
+    [HttpGet("{lat:float}/{lon:float}")]
+    [Produces(typeof(List<tfl_StopPoint>))]
+    public async Task<IActionResult> GetStopPointsByRadius(float lat, float lon, string? lineModeQuery, float radius = 200, CancellationToken ct = default)
+    {
+        try
+        {
+            return Ok(await _stopPointService.GetByRadius(lat, lon, lineModeQuery, radius, ct));
+        }
         catch (Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError);
