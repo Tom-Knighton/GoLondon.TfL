@@ -52,6 +52,26 @@ public partial class StopPointService : IStopPointService
         }
     }
 
+    public async Task<List<tfl_StopPoint>> GetByName(string name, string? lineModeQuery, CancellationToken ct)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(lineModeQuery) &&
+                !CSVListQuery().IsMatch(lineModeQuery))
+                throw new ValidationException("Invalid lineModeQuery, must be comma separated list of line modes, or null");
+
+            var stopPoints = await _apiClient.GetByName(name, lineModeQuery, ct);
+            if (!stopPoints.Any())
+                throw new NoStopPointException();
+
+            return stopPoints;
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ApiException("An unknown error occurred processing this request");
+        }
+    }
+
     [GeneratedRegex("^(?:[a-zA-Z0-9-]+(?:,[a-zA-Z0-9-]+)*|\\s*)$")]
     private static partial Regex CSVListQuery();
 }

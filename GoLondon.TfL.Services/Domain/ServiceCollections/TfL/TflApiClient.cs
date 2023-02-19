@@ -37,4 +37,18 @@ public class TflApiClient : ITfLApiClient
         var searchResponse = JsonSerializer.Deserialize<tfl_SearchResponse>(result);
         return searchResponse?.stopPoints;
     }
+
+    public async Task<List<tfl_StopPoint>> GetByName(string name, string? lineModeQuery, CancellationToken ct)
+    {
+        var url = $"StopPoint/Search?query={name}";
+        if (!string.IsNullOrEmpty(lineModeQuery))
+        {
+            url += $"&modes={lineModeQuery}";
+        }
+        var response = await _client.GetAsync(url, ct);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadAsStringAsync();
+        var searchResponse = JsonSerializer.Deserialize<tfl_SearchNameResponse>(result);
+        return searchResponse?.matches;
+    }
 }
