@@ -36,7 +36,7 @@ public class StopPointController : ControllerBase
         
     }
 
-    [HttpGet("{lat:float}/{lon:float}")]
+    [HttpGet("Search/{lat:float}/{lon:float}")]
     [Produces(typeof(List<tfl_StopPoint>))]
     public async Task<IActionResult> GetStopPointsByRadius(float lat, float lon, string? lineModeQuery, float radius = 200, CancellationToken ct = default)
     {
@@ -49,4 +49,19 @@ public class StopPointController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+    
+    [HttpGet("Search/{name}")]
+    [Produces(typeof(List<tfl_StopPoint>))]
+    public async Task<IActionResult> GetStopPointsByName(string name, string? lineModeQuery, CancellationToken ct = default)
+    {
+        try
+        {
+            return Ok(await _stopPointService.GetByName(name, lineModeQuery, ct));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+    
 }
