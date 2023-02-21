@@ -1,9 +1,20 @@
 using Microsoft.OpenApi.Models;
+using GoLondon.TfL.Services.Domain.ServiceCollections.TfL;
+using GoLondon.TfL.Services.Domain.TfL;
+using GoLondon.TfL.Services.TfL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(o =>
+{
+    o.AllowInputFormatterExceptionMessages = true;
+});
+
+builder
+    .Services
+    .AddTfLApi(builder.Configuration.GetSection("TflAPI"))
+    .AddScoped<IStopPointService, StopPointService>();
 
 if (builder.Environment.IsDevelopment())
 {
