@@ -33,6 +33,11 @@ public class StopPointController : ControllerBase
         {
             return BadRequest($"No stop point with id {id} was found");
         }
+        catch (TooManyStopPointsException)
+        {
+            return BadRequest(
+                $"Requested id {id} returned more than one stop point. Please input the most specific Id");
+        }
         
     }
 
@@ -57,6 +62,29 @@ public class StopPointController : ControllerBase
         try
         {
             return Ok(await _stopPointService.GetByName(name, lineModeQuery, ct));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpGet("{id}/EstimatedArrivalsDepartures")]
+    [Produces(typeof(List<tfl_ArrivalDeparture>))]
+    public async Task<IActionResult> GetStopPointArrivals(string id, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await _stopPointService.GetArrivals(id, ct);
+            return new JsonResult(result);
+        }
+        catch (NoStopPointException)
+        {
+            return BadRequest("Invalid stop id provided");
+        }
+        catch (TooManyStopPointsException)
+        {
+            return BadRequest("The stop id was not complete or returned more than one stop point");
         }
         catch (Exception ex)
         {

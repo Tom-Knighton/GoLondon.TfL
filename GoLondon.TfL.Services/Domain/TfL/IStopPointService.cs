@@ -10,4 +10,6 @@ public interface IStopPointService
         CancellationToken ct);
 
     public Task<List<tfl_StopPoint>> GetByName(string name, string? lineModeQuery, CancellationToken ct);
+
+    public Task<tfl_ArrivalDepartureParent[]> GetArrivals(string id, CancellationToken ct);
 }
