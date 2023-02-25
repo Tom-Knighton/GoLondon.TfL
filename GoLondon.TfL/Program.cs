@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.OpenApi.Models;
 using GoLondon.TfL.Services.Domain.ServiceCollections.TfL;
 using GoLondon.TfL.Services.Domain.TfL;
@@ -5,6 +6,16 @@ using GoLondon.TfL.Services.TfL;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{environmentName}.json", false)
+    .AddEnvironmentVariables();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
+}
 
 builder.Services.AddControllers().AddNewtonsoftJson(o =>
 {
