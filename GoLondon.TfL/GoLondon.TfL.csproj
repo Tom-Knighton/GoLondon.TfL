@@ -8,7 +8,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="GoLondon.Standard" Version="2023.2.19.2159" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.3" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3-beta1" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\GoLondon.TfL.Services\GoLondon.TfL.Services.csproj" />
     </ItemGroup>
 
 </Project>
