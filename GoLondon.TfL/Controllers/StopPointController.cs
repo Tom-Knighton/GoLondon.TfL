@@ -12,9 +12,11 @@ namespace GoLondon.TfL.Controllers;
 public class StopPointController : ControllerBase
 {
     private readonly IStopPointService _stopPointService;
-    public StopPointController(IStopPointService stopPointService)
+    private readonly ILogger _logger;
+    public StopPointController(IStopPointService stopPointService, ILogger<StopPointController> logger)
     {
         _stopPointService = stopPointService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -31,10 +33,12 @@ public class StopPointController : ControllerBase
         }
         catch (NoStopPointException ex)
         {
+            _logger.LogWarning("Stop point {id} not found, requested from endpoint", id);
             return BadRequest($"No stop point with id {id} was found");
         }
         catch (TooManyStopPointsException)
         {
+            _logger.LogWarning("Stop point {id} returned > 1 result, requested from endpoint", id);
             return BadRequest(
                 $"Requested id {id} returned more than one stop point. Please input the most specific Id");
         }
@@ -51,6 +55,7 @@ public class StopPointController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogCritical(ex, "Failed to search for stop point, {lat}, {lon}", lat, lon);
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -65,6 +70,7 @@ public class StopPointController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogCritical(ex, "Failed to search for stop point, {name}", name);
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -88,6 +94,7 @@ public class StopPointController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogCritical(ex, "Failed to get arrivals, {id}", id);
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

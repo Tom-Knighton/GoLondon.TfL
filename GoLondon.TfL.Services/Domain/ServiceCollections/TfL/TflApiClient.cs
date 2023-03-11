@@ -4,17 +4,20 @@ using System.Text.Json.Serialization;
 using GoLondon.Standard.Models.TfL;
 using GoLondon.TfL.Services.Domain.Exceptions;
 using GoLondon.TfL.Services.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace GoLondon.TfL.Services.Domain.ServiceCollections.TfL;
 
 public class TflApiClient : ITfLApiClient
 {
     private readonly HttpClient _client;
+    private readonly ILogger<TflApiClient> _logger;
     private const string ClientName = "TfLApiClient";
 
-    public TflApiClient(IHttpClientFactory clientFactory)
+    public TflApiClient(IHttpClientFactory clientFactory, ILogger<TflApiClient> logger)
     {
         _client = clientFactory.CreateClient(ClientName);
+        _logger = logger;
     }
     
     public async Task<tfl_StopPoint> GetStopPointByIdAsync(string id, CancellationToken ct)
@@ -63,7 +66,6 @@ public class TflApiClient : ITfLApiClient
     {
         var url = $"StopPoint/{stopPointId}/ArrivalDepartures?lineIds={lineMode}";
         var response = await _client.GetAsync(url, ct);
-        Console.WriteLine(url + " " + response.StatusCode);
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadAsStringAsync(ct);
         var arrivalResponse = JsonSerializer.Deserialize<List<tfl_ArrivalDeparture>>(result) ?? new();
@@ -74,7 +76,6 @@ public class TflApiClient : ITfLApiClient
     {
         var url = $"StopPoint/{stopPointId}/Arrivals";
         var response = await _client.GetAsync(url, ct);
-        Console.WriteLine(url + " " + response.StatusCode);
         response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadAsStringAsync(ct);
         var arrivalResponse = JsonSerializer.Deserialize<List<tfl_NonRailArrival>>(result);
