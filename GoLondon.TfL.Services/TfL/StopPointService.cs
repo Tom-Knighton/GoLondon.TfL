@@ -1,19 +1,23 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Text.RegularExpressions;
 using GoLondon.Standard.Models.TfL;
 using GoLondon.TfL.Services.Domain.Exceptions;
 using GoLondon.TfL.Services.Domain.ServiceCollections.TfL;
 using GoLondon.TfL.Services.Domain.TfL;
+using Microsoft.Extensions.Logging;
 
 namespace GoLondon.TfL.Services.TfL;
 
 public partial class StopPointService : IStopPointService
 {
+    private readonly ILogger _logger;
     private readonly ITfLApiClient _apiClient;
     
-    public StopPointService(ITfLApiClient apiClient)
+    public StopPointService(ITfLApiClient apiClient, ILogger<StopPointService> logger)
     {
         _apiClient = apiClient;
+        _logger = logger;
     }
     
     public async Task<tfl_StopPoint> GetStopPoint(string id, CancellationToken ct)
@@ -28,6 +32,11 @@ public partial class StopPointService : IStopPointService
         }
         catch (HttpRequestException ex)
         {
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                throw new NoStopPointException();
+            }
+            _logger.LogError(ex, "Failed to get stop point {id}", id);
             throw new ApiException("An unknown error occurred processing this request");
         }
     }
@@ -48,6 +57,7 @@ public partial class StopPointService : IStopPointService
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Failed to get stop points by radius {lat}, {lon}", lat, lon);
             throw new ApiException("An unknown error occurred processing this request");
         }
     }
@@ -58,7 +68,10 @@ public partial class StopPointService : IStopPointService
         {
             if (!string.IsNullOrWhiteSpace(lineModeQuery) &&
                 !CSVListQuery().IsMatch(lineModeQuery))
+            {
+                _logger.LogWarning("GetByName query was invalid: {query}", lineModeQuery);
                 throw new ValidationException("Invalid lineModeQuery, must be comma separated list of line modes, or null");
+            }
 
             var stopPoints = await _apiClient.GetByName(name, lineModeQuery, ct);
             if (!stopPoints.Any())
@@ -68,6 +81,7 @@ public partial class StopPointService : IStopPointService
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Failed to get stop points name: {name}", name);
             throw new ApiException("An unknown error occurred processing this request");
         }
     }
@@ -110,12 +124,15 @@ public partial class StopPointService : IStopPointService
 
             //Step 4: Run all tasks and remove final stops from LO/ELZ trains
             var arrivalDepartures = Array.Empty<tfl_ArrivalDepartureParent>();
-            arrivalDepartures = arrivalDepartures.Concat((await Task.WhenAll(arrivalDepartureTasks)).SelectMany(l => l)).ToArray();
-            arrivalDepartures = arrivalDepartures.Concat((await Task.WhenAll(arrivalsTasks)).SelectMany(l => l)).ToArray();
+            arrivalDepartures = arrivalDepartures.Concat((await Task.WhenAll(arrivalDepartureTasks)).SelectMany(l => l))
+                .ToArray();
+            arrivalDepartures = arrivalDepartures.Concat((await Task.WhenAll(arrivalsTasks)).SelectMany(l => l))
+                .ToArray();
 
             arrivalDepartures =
                 arrivalDepartures
-                    .Where(a => (a is tfl_ArrivalDeparture && stopPoint.children?.Any(c => c.id == a.destinationNaptanId) == false) ||
+                    .Where(a => (a is tfl_ArrivalDeparture &&
+                                 stopPoint.children?.Any(c => c.id == a.destinationNaptanId) == false) ||
                                 a is not tfl_ArrivalDeparture)
                     .OrderBy(a => GetOrderByDate(a))
                     .ToArray();
@@ -124,10 +141,16 @@ public partial class StopPointService : IStopPointService
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogError(ex, "Failed to get arrivals for {id}", id);
             throw new ApiException("An unknown error occurred processing this request");
+        }
+        catch (NoStopPointException ex)
+        {
+            throw;
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get arrivals for {id}", id);
             throw new Exception("An error occurred", ex);
         }
     }

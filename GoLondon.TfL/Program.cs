@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using GoLondon.TfL.Services.Domain.ServiceCollections.TfL;
 using GoLondon.TfL.Services.Domain.TfL;
 using GoLondon.TfL.Services.TfL;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,7 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 app.MapControllers();
@@ -59,5 +61,21 @@ if (app.Environment.IsDevelopment())
         o.RoutePrefix = string.Empty;
     });
 }
+
+
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", true)
+    .AddEnvironmentVariables()
+    .AddUserSecrets(Assembly.GetExecutingAssembly())
+    .Build();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.AppSettings()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+
+Log.Information("Startup!");
 
 app.Run();
